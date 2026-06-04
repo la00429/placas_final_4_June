@@ -1,6 +1,7 @@
 """
-Aplicación Streamlit para detección de placas colombianas
-YOLOv8 + EasyOCR
+APP.PY
+Detector Inteligente de Placas Colombianas
+YOLOv8 + EasyOCR + Clasificación Colombiana
 """
 
 import streamlit as st
@@ -38,21 +39,21 @@ def cargar_modelos():
         )
 
         # ==================================
-        # CARGAR MEJOR MODELO YOLO
+        # BUSCAR MODELO ENTRENADO
         # ==================================
 
         modelo_path = None
 
-        # prioridad 1
         if Path("runs/best.pt").exists():
+
             modelo_path = "runs/best.pt"
 
-        # prioridad 2
         elif Path("modelo_final/best.pt").exists():
+
             modelo_path = "modelo_final/best.pt"
 
-        # prioridad 3
         else:
+
             runs_dir = Path("runs/detect")
 
             experimentos = list(
@@ -60,6 +61,7 @@ def cargar_modelos():
             )
 
             if experimentos:
+
                 modelo_path = str(
                     max(
                         experimentos,
@@ -67,14 +69,24 @@ def cargar_modelos():
                     )
                 )
 
-        # cargar modelo
+        # ==================================
+        # CARGAR YOLO
+        # ==================================
+
         if modelo_path:
+
             detector = YOLO(modelo_path)
-            st.sidebar.success(f"✅ Modelo cargado")
+
+            st.sidebar.success(
+                "✅ Modelo entrenado cargado"
+            )
+
             st.sidebar.code(modelo_path)
 
         else:
+
             detector = YOLO("yolov8s.pt")
+
             st.sidebar.warning(
                 "⚠️ Usando YOLO genérico"
             )
@@ -85,91 +97,378 @@ def cargar_modelos():
 reader, detector = cargar_modelos()
 
 # ==========================================
+# CLASIFICADOR COLOMBIANO
+# ==========================================
+
+def clasificar_tipo_placa(placa_crop, texto):
+
+    texto = re.sub(
+        r'[^A-Z0-9]',
+        '',
+        texto.upper()
+    )
+
+    hsv = cv2.cvtColor(
+        placa_crop,
+        cv2.COLOR_BGR2HSV
+    )
+
+    # ======================================
+    # AMARILLO
+    # ======================================
+
+    amarillo_bajo = np.array([15, 80, 80])
+    amarillo_alto = np.array([40, 255, 255])
+
+    mask_amarillo = cv2.inRange(
+        hsv,
+        amarillo_bajo,
+        amarillo_alto
+    )
+
+    amarillo = (
+        np.sum(mask_amarillo > 0)
+        / mask_amarillo.size
+    )
+
+    # ======================================
+    # BLANCO
+    # ======================================
+
+    blanco_bajo = np.array([0, 0, 170])
+    blanco_alto = np.array([180, 50, 255])
+
+    mask_blanco = cv2.inRange(
+        hsv,
+        blanco_bajo,
+        blanco_alto
+    )
+
+    blanco = (
+        np.sum(mask_blanco > 0)
+        / mask_blanco.size
+    )
+
+    # ======================================
+    # AZUL
+    # ======================================
+
+    azul_bajo = np.array([90, 50, 50])
+    azul_alto = np.array([140, 255, 255])
+
+    mask_azul = cv2.inRange(
+        hsv,
+        azul_bajo,
+        azul_alto
+    )
+
+    azul = (
+        np.sum(mask_azul > 0)
+        / mask_azul.size
+    )
+
+    # ======================================
+    # VERDE
+    # ======================================
+
+    verde_bajo = np.array([35, 40, 40])
+    verde_alto = np.array([90, 255, 255])
+
+    mask_verde = cv2.inRange(
+        hsv,
+        verde_bajo,
+        verde_alto
+    )
+
+    verde = (
+        np.sum(mask_verde > 0)
+        / mask_verde.size
+    )
+
+    # ======================================
+    # ROJO
+    # ======================================
+
+    rojo1_bajo = np.array([0, 70, 50])
+    rojo1_alto = np.array([10, 255, 255])
+
+    rojo2_bajo = np.array([170, 70, 50])
+    rojo2_alto = np.array([180, 255, 255])
+
+    mask_rojo1 = cv2.inRange(
+        hsv,
+        rojo1_bajo,
+        rojo1_alto
+    )
+
+    mask_rojo2 = cv2.inRange(
+        hsv,
+        rojo2_bajo,
+        rojo2_alto
+    )
+
+    mask_rojo = mask_rojo1 + mask_rojo2
+
+    rojo = (
+        np.sum(mask_rojo > 0)
+        / mask_rojo.size
+    )
+
+    # ======================================
+    # DEBUG VISUAL
+    # ======================================
+
+    st.write("🟡 Amarillo:", round(amarillo, 3))
+    st.write("⚪ Blanco:", round(blanco, 3))
+    st.write("🔵 Azul:", round(azul, 3))
+    st.write("🟢 Verde:", round(verde, 3))
+    st.write("🔴 Rojo:", round(rojo, 3))
+
+    # ======================================
+    # MOTO
+    # ======================================
+
+    es_moto = bool(
+        re.match(
+            r"^[A-Z]{3}\d{2}[A-Z]$",
+            texto
+        )
+    )
+
+    if es_moto:
+
+        if amarillo > 0.15:
+            return "Motocicleta Particular"
+
+        elif blanco > 0.15:
+            return "Motocicleta Pública"
+
+        else:
+            return "Motocicleta"
+
+    # ======================================
+    # DIPLOMÁTICAS
+    # ======================================
+
+    if azul > 0.20:
+
+        if texto.startswith("CD"):
+            return "Cuerpo Diplomático"
+
+        elif texto.startswith("CC"):
+            return "Cuerpo Consular"
+
+        elif texto.startswith("OI"):
+            return "Organismo Internacional"
+
+        elif texto.startswith("AT"):
+            return "Personal Administrativo Diplomático"
+
+        else:
+            return "Vehículo Diplomático"
+
+    # ======================================
+    # REMOLQUES
+    # ======================================
+
+    if verde > 0.20:
+
+        if texto.startswith("R"):
+            return "Remolque"
+
+        elif texto.startswith("S"):
+            return "Semirremolque"
+
+        else:
+            return "Vehículo Oficial"
+
+    # ======================================
+    # CARGA PÚBLICA
+    # ======================================
+
+    if rojo > 0.20:
+        return "Vehículo de Carga Pública"
+
+    # ======================================
+    # SERVICIO PÚBLICO
+    # ======================================
+
+    if blanco > 0.25:
+        return "Servicio Público"
+
+    # ======================================
+    # PARTICULAR
+    # ======================================
+
+    if amarillo > 0.15:
+        return "Vehículo Particular"
+
+    # ======================================
+    # CLÁSICOS
+    # ======================================
+
+    if azul > 0.08 and blanco > 0.08:
+        return "Vehículo Clásico"
+
+    return "Desconocido"
+
+# ==========================================
 # ANALIZAR PLACA
 # ==========================================
 
 def analizar_placa(texto_ocr):
 
+    placa = texto_ocr.strip().upper()
+
     placa = re.sub(
         r'[^A-Z0-9]',
         '',
-        texto_ocr.upper()
+        placa
     )
 
+    st.write("🔎 OCR limpio:", placa)
+
     # ======================================
-    # FORMATO PLACAS COLOMBIA
+    # FORMATO AAA999
     # ======================================
 
-    es_carro_antiguo = bool(
-        re.match(r"^[A-Z]{3}\d{3}$", placa)
+    if len(placa) == 6:
+
+        letras = placa[:3]
+        numeros = placa[3:]
+
+        letras = letras.replace("0", "O")
+        letras = letras.replace("1", "I")
+        letras = letras.replace("2", "Z")
+        letras = letras.replace("8", "B")
+
+        numeros = numeros.replace("O", "0")
+        numeros = numeros.replace("I", "1")
+        numeros = numeros.replace("Z", "2")
+        numeros = numeros.replace("B", "8")
+
+        placa = letras + numeros
+
+    # ======================================
+    # FORMATO AAA999A
+    # ======================================
+
+    elif len(placa) == 7:
+
+        letras = placa[:3]
+        numeros = placa[3:6]
+        final = placa[6]
+
+        letras = letras.replace("0", "O")
+        letras = letras.replace("1", "I")
+
+        numeros = numeros.replace("O", "0")
+        numeros = numeros.replace("I", "1")
+
+        final = final.replace("0", "O")
+        final = final.replace("1", "I")
+
+        placa = letras + numeros + final
+
+    st.success(f"✅ OCR corregido: {placa}")
+
+    # ======================================
+    # VALIDAR FORMATOS
+    # ======================================
+
+    es_carro = bool(
+        re.match(
+            r"^[A-Z]{3}\d{3}$",
+            placa
+        )
     )
 
-    es_carro_nuevo = bool(
-        re.match(r"^[A-Z]{3}\d{3}[A-Z]$", placa)
+    es_mercosur = bool(
+        re.match(
+            r"^[A-Z]{3}\d{3}[A-Z]$",
+            placa
+        )
     )
 
     es_moto = bool(
-        re.match(r"^[A-Z]{3}\d{2}[A-Z]$", placa)
+        re.match(
+            r"^[A-Z]{3}\d{2}[A-Z]$",
+            placa
+        )
     )
 
     if not (
-        es_carro_antiguo
-        or es_carro_nuevo
+        es_carro
+        or es_mercosur
         or es_moto
     ):
+
+        st.error(
+            f"❌ Formato inválido: {placa}"
+        )
+
         return None
 
     # ======================================
-    # DETERMINAR TIPO
+    # DÍGITO RESTRICCIÓN
     # ======================================
 
     if es_moto:
-        tipo = "Motocicleta"
+
         digito = int(placa[-2])
+
         formato = "Moto"
 
-    elif es_carro_nuevo:
-        tipo = "Vehículo Particular"
+    elif es_mercosur:
+
         digito = int(placa[-2])
+
         formato = "Mercosur"
 
     else:
-        tipo = "Vehículo Particular"
+
         digito = int(placa[-1])
-        formato = "Antiguo"
+
+        formato = "Tradicional"
 
     # ======================================
     # PICO Y PLACA
     # ======================================
 
     dia_semana = datetime.now().weekday()
+
     hora_actual = datetime.now().hour
 
     en_horario = 6 <= hora_actual < 20
 
-    tabla_restriccion = {
+    tabla = {
+
         0: [4, 5, 6, 7],
         1: [8, 9, 0, 1],
         2: [2, 3, 4, 5],
         3: [6, 7, 8, 9],
-        4: [0, 1, 2, 3],
+        4: [0, 1, 2, 3]
     }
 
     if dia_semana >= 5:
-        estado = "✅ Libre (Fin de semana)"
+
+        estado = "✅ Libre (fin de semana)"
 
     elif not en_horario:
-        estado = "✅ Libre (Fuera de horario)"
 
-    elif digito in tabla_restriccion[dia_semana]:
+        estado = "✅ Libre (fuera horario)"
+
+    elif digito in tabla[dia_semana]:
+
         estado = "🚫 RESTRICCIÓN ACTIVA"
 
     else:
-        estado = "✅ Libre Circulación"
+
+        estado = "✅ Libre circulación"
 
     return {
+
         "placa": placa,
-        "tipo": tipo,
         "digito": digito,
         "estado": estado,
         "formato": formato
@@ -179,18 +478,17 @@ def analizar_placa(texto_ocr):
 # INTERFAZ
 # ==========================================
 
-st.title("🇨🇴 Detector de Placas Colombianas")
+st.title("🇨🇴 Detector Inteligente de Placas")
 
-st.markdown(
-    """
-Sistema automático de:
+st.markdown("""
+Sistema avanzado de:
 
-- detección de placas
-- OCR
-- validación formato
+- detección automática
+- OCR robusto
+- clasificación colombiana
+- validación inteligente
 - pico y placa
-"""
-)
+""")
 
 # ==========================================
 # SIDEBAR
@@ -202,28 +500,28 @@ with st.sidebar:
 
     confianza = st.slider(
         "Confianza mínima",
-        min_value=0.1,
-        max_value=0.9,
-        value=0.35,
+        min_value=0.10,
+        max_value=0.90,
+        value=0.30,
         step=0.05
     )
 
-    mostrar_recortes = st.checkbox(
-        "Mostrar recortes OCR",
+    mostrar_ocr = st.checkbox(
+        "Mostrar OCR",
         value=True
     )
 
 # ==========================================
-# SUBIR IMAGEN
+# UPLOAD
 # ==========================================
 
 archivo = st.file_uploader(
-    "Sube una imagen",
+    "📤 Sube una imagen",
     type=["jpg", "jpeg", "png"]
 )
 
 # ==========================================
-# PROCESAMIENTO
+# PROCESAR
 # ==========================================
 
 if archivo:
@@ -244,15 +542,15 @@ if archivo:
     img_original = img.copy()
 
     # ======================================
-    # DETECCIÓN YOLO
+    # DETECCIÓN
     # ======================================
 
-    with st.spinner("Detectando placas..."):
+    with st.spinner("🔍 Detectando placas..."):
 
         resultados = detector(
             img,
             conf=confianza,
-            imgsz=960
+            imgsz=1280
         )
 
     detecciones = []
@@ -270,10 +568,12 @@ if archivo:
                 box.xyxy[0]
             )
 
-            conf_det = float(box.conf[0])
+            conf_det = float(
+                box.conf[0]
+            )
 
             # ==================================
-            # DIBUJAR BOUNDING BOX
+            # DIBUJAR
             # ==================================
 
             cv2.rectangle(
@@ -285,7 +585,7 @@ if archivo:
             )
 
             # ==================================
-            # RECORTE PLACA
+            # RECORTE
             # ==================================
 
             placa_crop = img_original[
@@ -308,74 +608,170 @@ if archivo:
             gray = cv2.resize(
                 gray,
                 None,
-                fx=3,
-                fy=3,
+                fx=4,
+                fy=4,
                 interpolation=cv2.INTER_CUBIC
             )
 
             gray = cv2.GaussianBlur(
                 gray,
-                (5, 5),
+                (3, 3),
                 0
             )
 
-            gray = cv2.threshold(
+            imagenes_ocr = []
+
+            # normal
+            imagenes_ocr.append(gray)
+
+            # threshold
+            thresh = cv2.threshold(
                 gray,
                 0,
                 255,
                 cv2.THRESH_BINARY + cv2.THRESH_OTSU
             )[1]
 
+            imagenes_ocr.append(thresh)
+
+            # invertida
+            invertida = cv2.bitwise_not(
+                thresh
+            )
+
+            imagenes_ocr.append(
+                invertida
+            )
+
+            # adaptive
+            adaptive = cv2.adaptiveThreshold(
+                gray,
+                255,
+                cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
+                cv2.THRESH_BINARY,
+                11,
+                2
+            )
+
+            imagenes_ocr.append(
+                adaptive
+            )
+
+            # sharpen
+            kernel = np.array([
+                [-1, -1, -1],
+                [-1,  9, -1],
+                [-1, -1, -1]
+            ])
+
+            sharp = cv2.filter2D(
+                gray,
+                -1,
+                kernel
+            )
+
+            imagenes_ocr.append(
+                sharp
+            )
+
             # ==================================
-            # OCR
+            # MOSTRAR OCR
             # ==================================
 
-            textos = reader.readtext(gray)
+            if mostrar_ocr:
 
-            if mostrar_recortes:
                 st.image(
-                    gray,
-                    caption="Recorte OCR",
+                    thresh,
+                    caption="OCR",
                     width=300
                 )
 
             # ==================================
-            # ANALIZAR OCR
+            # OCR MÚLTIPLE
             # ==================================
 
-            for (_, texto, conf_ocr) in textos:
+            mejor_texto = ""
+            mejor_conf = 0
 
-                if conf_ocr < 0.30:
-                    continue
+            for img_ocr in imagenes_ocr:
 
-                analisis = analizar_placa(texto)
+                resultados_ocr = reader.readtext(
+                    img_ocr,
+                    detail=1
+                )
+
+                for (_, texto, conf_ocr) in resultados_ocr:
+
+                    texto = re.sub(
+                        r'[^A-Z0-9]',
+                        '',
+                        texto.upper()
+                    )
+
+                    st.write(
+                        "🧠 OCR:",
+                        texto
+                    )
+
+                    if len(texto) < 5:
+                        continue
+
+                    if conf_ocr > mejor_conf:
+
+                        mejor_conf = conf_ocr
+                        mejor_texto = texto
+
+            # ==================================
+            # MEJOR OCR
+            # ==================================
+
+            if mejor_texto:
+
+                st.success(
+                    f"✅ Mejor OCR: {mejor_texto}"
+                )
+
+                analisis = analizar_placa(
+                    mejor_texto
+                )
 
                 if analisis:
+
+                    tipo_vehiculo = clasificar_tipo_placa(
+                        placa_crop,
+                        mejor_texto
+                    )
 
                     detecciones.append({
 
                         "placa": analisis["placa"],
-                        "tipo": analisis["tipo"],
+                        "tipo": tipo_vehiculo,
                         "digito": analisis["digito"],
                         "estado": analisis["estado"],
                         "formato": analisis["formato"],
                         "conf_det": conf_det,
-                        "conf_ocr": conf_ocr
+                        "conf_ocr": mejor_conf
                     })
 
     # ======================================
-    # MOSTRAR RESULTADOS
+    # MOSTRAR IMAGEN
     # ======================================
 
     with col1:
 
-        st.subheader("📷 Imagen procesada")
+        st.subheader(
+            "📷 Imagen procesada"
+        )
 
         st.image(
             img,
             channels="BGR",
-            use_column_width=True
+            use_container_width=True
         )
+
+    # ======================================
+    # RESULTADOS
+    # ======================================
 
     with col2:
 
@@ -383,7 +779,10 @@ if archivo:
 
         if detecciones:
 
-            for i, det in enumerate(detecciones, 1):
+            for i, det in enumerate(
+                detecciones,
+                1
+            ):
 
                 with st.expander(
                     f"Placa {i}: {det['placa']}",
@@ -391,7 +790,7 @@ if archivo:
                 ):
 
                     st.success(
-                        f"Placa detectada: {det['placa']}"
+                        f"✅ {det['placa']}"
                     )
 
                     c1, c2, c3 = st.columns(3)
@@ -414,14 +813,24 @@ if archivo:
                     st.divider()
 
                     if "RESTRICCIÓN" in det["estado"]:
-                        st.error(det["estado"])
+
+                        st.error(
+                            det["estado"]
+                        )
+
                     else:
-                        st.success(det["estado"])
+
+                        st.success(
+                            det["estado"]
+                        )
 
                     st.caption(
                         f"""
-Detección: {det['conf_det']:.2%}
-OCR: {det['conf_ocr']:.2%}
+Detección:
+{det['conf_det']:.2%}
+
+OCR:
+{det['conf_ocr']:.2%}
 """
                     )
 
@@ -431,16 +840,14 @@ OCR: {det['conf_ocr']:.2%}
                 "❌ No se detectó ninguna placa válida"
             )
 
-            st.info(
-                """
-Sugerencias:
+            st.info("""
+💡 Recomendaciones:
 
+- usar fotos más cercanas
+- evitar blur
 - buena iluminación
-- placa visible
-- evitar imágenes borrosas
-- evitar ángulos extremos
-"""
-            )
+- evitar inclinación
+""")
 
 # ==========================================
 # FOOTER
@@ -449,5 +856,5 @@ Sugerencias:
 st.divider()
 
 st.caption(
-    "YOLOv8 + EasyOCR | Detección Placas Colombia"
+    "YOLOv8 + EasyOCR + Clasificación Colombiana"
 )

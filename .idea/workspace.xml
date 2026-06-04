@@ -4,10 +4,10 @@
     <option name="autoReloadType" value="ALL" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="9790b904-2dab-4c94-8f01-b71374a7f3e2" name="Changes" comment="Changes">
-      <change afterPath="$PROJECT_DIR$/prueba_yolo.py" afterDir="false" />
+    <list default="true" id="9790b904-2dab-4c94-8f01-b71374a7f3e2" name="Changes" comment="Changes_final">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app_streamlit.py" beforeDir="false" afterPath="$PROJECT_DIR$/app_streamlit.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/evaluar_modelo.py" beforeDir="false" afterPath="$PROJECT_DIR$/evaluar_modelo.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -38,23 +38,23 @@
 }]]></component>
   <component name="NextEditCompletionFeaturesState">
     <decayedCancelled>
-      <entry key="MS100" value="1.4885963019242576" />
-      <entry key="MS500" value="2.4984828234333376" />
-      <entry key="S2" value="2.8601339230187968" />
-      <entry key="S5" value="2.9427833667302243" />
-      <entry key="S10" value="2.9711755412166294" />
-      <entry key="S30" value="2.9903433964312933" />
-      <entry key="S60" value="2.995165618834105" />
-      <entry key="M2" value="2.997751880895097" />
-      <entry key="M5" value="3.1147990344772882" />
-      <entry key="M10" value="4.019537536607009" />
-      <entry key="M15" value="5.107101384300244" />
-      <entry key="M30" value="7.354584128491071" />
-      <entry key="H1" value="9.260202696795071" />
-      <entry key="H2" value="10.506089684617882" />
-      <entry key="H4" value="11.219164791925659" />
-      <entry key="D1" value="11.864889164001157" />
-      <entry key="W1" value="11.980573070219133" />
+      <entry key="MS100" value="9.496456213731675E-187" />
+      <entry key="MS500" value="1.9912070512747492E-37" />
+      <entry key="S2" value="4.439346921284834E-9" />
+      <entry key="S5" value="0.002666584800025127" />
+      <entry key="S10" value="0.2340458649736513" />
+      <entry key="S30" value="4.679113791054424" />
+      <entry key="S60" value="9.909584093991226" />
+      <entry key="M2" value="14.424585029237916" />
+      <entry key="M5" value="18.071286580166273" />
+      <entry key="M10" value="19.516979330676122" />
+      <entry key="M15" value="20.134659318776905" />
+      <entry key="M30" value="21.59664701066593" />
+      <entry key="H1" value="24.354382729489352" />
+      <entry key="H2" value="27.65152940104383" />
+      <entry key="H4" value="30.301806561309423" />
+      <entry key="D1" value="33.29419669904131" />
+      <entry key="W1" value="33.896723153088196" />
     </decayedCancelled>
     <decayedSelected>
       <entry key="MS100" value="0.0" />
@@ -76,23 +76,23 @@
       <entry key="W1" value="0.0" />
     </decayedSelected>
     <decayedShown>
-      <entry key="MS100" value="1.4082979143228878" />
-      <entry key="MS500" value="2.470926847452885" />
-      <entry key="S2" value="2.852214931086538" />
-      <entry key="S5" value="2.9395215246240434" />
-      <entry key="S10" value="2.9695284283760097" />
-      <entry key="S30" value="2.989790714686401" />
-      <entry key="S60" value="2.9948888195330676" />
-      <entry key="M2" value="2.997613063664814" />
-      <entry key="M5" value="3.1146614824026337" />
-      <entry key="M10" value="4.019148118046267" />
-      <entry key="M15" value="5.106584742887889" />
-      <entry key="M30" value="7.354060224637215" />
-      <entry key="H1" value="9.259828153460155" />
-      <entry key="H2" value="10.505865607386937" />
-      <entry key="H4" value="11.21904222066386" />
-      <entry key="D1" value="11.864867145826054" />
-      <entry key="W1" value="11.980569884081584" />
+      <entry key="MS100" value="1.0" />
+      <entry key="MS500" value="1.0" />
+      <entry key="S2" value="1.0000000044306858" />
+      <entry key="S5" value="1.00266437593896" />
+      <entry key="S10" value="1.233946803827541" />
+      <entry key="S30" value="5.678444113092918" />
+      <entry key="S60" value="10.908872453257223" />
+      <entry key="M2" value="15.424066180532312" />
+      <entry key="M5" value="19.071026283449235" />
+      <entry key="M10" value="20.516838019077618" />
+      <entry key="M15" value="21.134556270759447" />
+      <entry key="M30" value="22.596539286559477" />
+      <entry key="H1" value="25.35423292948444" />
+      <entry key="H2" value="28.651387267363095" />
+      <entry key="H4" value="31.301706854788538" />
+      <entry key="D1" value="34.294174523436844" />
+      <entry key="W1" value="34.896719822952" />
     </decayedShown>
   </component>
   <component name="ProjectColorInfo">{
@@ -156,7 +156,7 @@
       <workItem from="1780514068379" duration="1363000" />
       <workItem from="1780520154913" duration="5565000" />
       <workItem from="1780538764928" duration="8955000" />
-      <workItem from="1780584216231" duration="8927000" />
+      <workItem from="1780584216231" duration="11895000" />
     </task>
     <task id="LOCAL-00001" summary="Changes">
       <option name="closed" value="true" />
@@ -166,7 +166,15 @@
       <option name="project" value="LOCAL" />
       <updated>1780590284480</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="Changes_final">
+      <option name="closed" value="true" />
+      <created>1780594970706</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1780594970706</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -174,6 +182,7 @@
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="Changes" />
-    <option name="LAST_COMMIT_MESSAGE" value="Changes" />
+    <MESSAGE value="Changes_final" />
+    <option name="LAST_COMMIT_MESSAGE" value="Changes_final" />
   </component>
 </project>
