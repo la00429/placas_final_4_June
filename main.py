@@ -14,38 +14,38 @@ def entrenar_detector():
     """Entrena el modelo YOLOv8 durante 100 épocas completas."""
 
     print("=" * 60)
-    print("🚀 ENTRENAMIENTO DE DETECTOR DE PLACAS")
+    print(" ENTRENAMIENTO DE DETECTOR DE PLACAS")
     print("=" * 60)
-    print("⚠️  SIN EARLY STOPPING - 100 ÉPOCAS COMPLETAS")
+    print("  SIN EARLY STOPPING - 100 ÉPOCAS COMPLETAS")
     print("=" * 60)
 
     # Verificar GPU
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
-    print(f"\n💻 Dispositivo: {device}")
+    print(f"\n Dispositivo: {device}")
     if torch.cuda.is_available():
-        print(f"🎮 GPU: {torch.cuda.get_device_name(0)}")
-        print(f"📊 Memoria: {torch.cuda.get_device_properties(0).total_memory / 1e9:.2f} GB")
+        print(f" GPU: {torch.cuda.get_device_name(0)}")
+        print(f" Memoria: {torch.cuda.get_device_properties(0).total_memory / 1e9:.2f} GB")
     else:
-        print("⚠️  Usando CPU (será más lento)")
+        print("️  Usando CPU (será más lento)")
 
     # Cargar modelo pre-entrenado
-    print("\n📥 Cargando YOLOv8n pre-entrenado...")
+    print("\n Cargando YOLOv8n pre-entrenado...")
     modelo = YOLO('yolov8n.pt')
 
     # Nombre del experimento
     nombre_experimento = f"detector_placas_100ep_{datetime.now().strftime('%Y%m%d_%H%M')}"
 
-    print(f"\n🏋️ Configuración de entrenamiento:")
-    print(f"   📁 Experimento: {nombre_experimento}")
-    print(f"   🔄 Épocas: 100 (completas)")
-    print(f"   📦 Batch size: 16")
-    print(f"   🖼️  Tamaño imagen: 640")
-    print(f"   ⏸️  Early Stopping: DESACTIVADO")
-    print(f"\n⏱️  Tiempo estimado:")
+    print(f"\n️ Configuración de entrenamiento:")
+    print(f"    Experimento: {nombre_experimento}")
+    print(f"    Épocas: 100 (completas)")
+    print(f"    Batch size: 16")
+    print(f"    Tamaño imagen: 640")
+    print(f"    Early Stopping: DESACTIVADO")
+    print(f"\n  Tiempo estimado:")
     print(f"   - CPU: 4-8 horas")
     print(f"   - GPU: 30-60 minutos")
 
-    input("\n⚠️  Presiona ENTER para comenzar el entrenamiento...")
+    input("\n️  Presiona ENTER para comenzar el entrenamiento...")
 
     try:
         resultados = modelo.train(
@@ -83,9 +83,9 @@ def entrenar_detector():
 
 
         print("\n" + "=" * 60)
-        print("✅ ENTRENAMIENTO COMPLETADO!")
+        print(" ENTRENAMIENTO COMPLETADO!")
         print("=" * 60)
-        print(f"📁 100 épocas completadas exitosamente")
+        print(f" 100 épocas completadas exitosamente")
 
         # Buscar el mejor modelo (puede estar en ruta duplicada)
         from pathlib import Path
@@ -95,7 +95,7 @@ def entrenar_detector():
 
         if posibles_rutas:
             mejor_modelo = posibles_rutas[0]
-            print(f"\n📁 Mejor modelo: {mejor_modelo}")
+            print(f"\n Mejor modelo: {mejor_modelo}")
 
             # Crear carpeta modelo_final
             os.makedirs('modelo_final', exist_ok=True)
@@ -103,10 +103,10 @@ def entrenar_detector():
             # Copiar modelo
             destino = Path('runs/best.pt')
             shutil.copy2(mejor_modelo, destino)
-            print(f"✅ Modelo copiado a: {destino}")
+            print(f" Modelo copiado a: {destino}")
 
             # Mostrar métricas finales
-            print("\n📈 MÉTRICAS FINALES:")
+            print("\n MÉTRICAS FINALES:")
             if hasattr(resultados, 'results_dict'):
                 metrics = resultados.results_dict
                 print(f"   mAP50-95: {metrics.get('metrics/mAP50-95(B)', 'N/A'):.4f}")
@@ -114,24 +114,24 @@ def entrenar_detector():
                 print(f"   Precision: {metrics.get('metrics/precision(B)', 'N/A'):.4f}")
                 print(f"   Recall:    {metrics.get('metrics/recall(B)', 'N/A'):.4f}")
 
-            print("\n💡 Para usar el modelo:")
+            print("\n Para usar el modelo:")
             print("   1. Cierra y reinicia Streamlit")
             print("   2. El nuevo modelo se cargará automáticamente")
             print("   3. Prueba con tus imágenes")
 
         else:
-            print("\n⚠️  No se encontró el modelo best.pt")
+            print("\n️  No se encontró el modelo best.pt")
             print("   Revisa la carpeta runs/detect manualmente")
 
         return resultados
 
     except KeyboardInterrupt:
-        print("\n\n⚠️  Entrenamiento interrumpido por el usuario")
+        print("\n\n️  Entrenamiento interrumpido por el usuario")
         print("   El modelo guardado hasta la última época está en:")
         print("   runs/detect/{nombre_experimento}/weights/last.pt")
 
     except Exception as e:
-        print(f"\n❌ Error durante el entrenamiento: {e}")
+        print(f"\n Error durante el entrenamiento: {e}")
         import traceback
         traceback.print_exc()
 
