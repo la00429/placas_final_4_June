@@ -1,7 +1,3 @@
-"""
-Script de entrenamiento YOLOv8 para detección de placas colombianas
-Versión: 100 épocas completas SIN Early Stopping
-"""
 from ultralytics import YOLO
 import torch
 import os
@@ -11,15 +7,12 @@ from pathlib import Path
 
 
 def entrenar_detector():
-    """Entrena el modelo YOLOv8 durante 100 épocas completas."""
-
     print("=" * 60)
     print(" ENTRENAMIENTO DE DETECTOR DE PLACAS")
     print("=" * 60)
     print("  SIN EARLY STOPPING - 100 ÉPOCAS COMPLETAS")
     print("=" * 60)
 
-    # Verificar GPU
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     print(f"\n Dispositivo: {device}")
     if torch.cuda.is_available():
@@ -28,11 +21,9 @@ def entrenar_detector():
     else:
         print("️  Usando CPU (será más lento)")
 
-    # Cargar modelo pre-entrenado
     print("\n Cargando YOLOv8n pre-entrenado...")
     modelo = YOLO('yolov8n.pt')
 
-    # Nombre del experimento
     nombre_experimento = f"detector_placas_100ep_{datetime.now().strftime('%Y%m%d_%H%M')}"
 
     print(f"\n️ Configuración de entrenamiento:")
@@ -87,25 +78,20 @@ def entrenar_detector():
         print("=" * 60)
         print(f" 100 épocas completadas exitosamente")
 
-        # Buscar el mejor modelo (puede estar en ruta duplicada)
         from pathlib import Path
 
-        # Buscar en todas las posibles ubicaciones
         posibles_rutas = list(Path('runs/detect').rglob(f'{nombre_experimento}/weights/best.pt'))
 
         if posibles_rutas:
             mejor_modelo = posibles_rutas[0]
             print(f"\n Mejor modelo: {mejor_modelo}")
 
-            # Crear carpeta modelo_final
             os.makedirs('modelo_final', exist_ok=True)
 
-            # Copiar modelo
             destino = Path('runs/best.pt')
             shutil.copy2(mejor_modelo, destino)
             print(f" Modelo copiado a: {destino}")
 
-            # Mostrar métricas finales
             print("\n MÉTRICAS FINALES:")
             if hasattr(resultados, 'results_dict'):
                 metrics = resultados.results_dict
@@ -134,7 +120,5 @@ def entrenar_detector():
         print(f"\n Error durante el entrenamiento: {e}")
         import traceback
         traceback.print_exc()
-
-
 if __name__ == "__main__":
     entrenar_detector()

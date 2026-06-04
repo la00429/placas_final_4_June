@@ -1,8 +1,3 @@
-"""
-Sistema de Detección y Reconocimiento de Placas Vehiculares Colombianas
-Versión con Diagnóstico Completo
-"""
-
 import streamlit as st
 from datetime import datetime
 import re
@@ -15,20 +10,12 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 
-# ==========================================
-# CONFIGURACIÓN DE PÁGINA
-# ==========================================
-
 st.set_page_config(
     page_title="Sistema ANPR - Placas Colombianas",
     page_icon="🇨🇴",
     layout="wide",
     initial_sidebar_state="expanded"
 )
-
-# ==========================================
-# ESTILOS CSS
-# ==========================================
 
 st.markdown("""
 <style>
@@ -105,20 +92,11 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# ==========================================
-# INICIALIZAR ESTADO
-# ==========================================
-
 if 'detecciones_historial' not in st.session_state:
     st.session_state.detecciones_historial = []
 
 if 'contador_detecciones' not in st.session_state:
     st.session_state.contador_detecciones = 0
-
-
-# ==========================================
-# FUNCIONES AUXILIARES
-# ==========================================
 
 def mostrar_alerta(tipo, mensaje):
     alert_class = f"alert-{tipo}"
@@ -127,11 +105,6 @@ def mostrar_alerta(tipo, mensaje):
 
 def mostrar_debug(titulo, contenido):
     st.markdown(f'<div class="debug-box"><strong>{titulo}:</strong> {contenido}</div>', unsafe_allow_html=True)
-
-
-# ==========================================
-# CARGAR MODELOS
-# ==========================================
 
 @st.cache_resource
 def cargar_modelos():
@@ -172,11 +145,6 @@ def cargar_modelos():
 
 
 reader, detector = cargar_modelos()
-
-
-# ==========================================
-# CLASIFICADOR DE PLACAS
-# ==========================================
 
 def clasificar_tipo_placa(placa_crop, texto):
     texto_limpio = re.sub(r'[^A-Z0-9]', '', texto.upper())
@@ -235,14 +203,9 @@ def clasificar_tipo_placa(placa_crop, texto):
     return "Tipo No Identificado"
 
 
-# ==========================================
-# ANALIZADOR DE PLACA
-# ==========================================
-
 def analizar_placa(texto_ocr):
     placa = re.sub(r'[^A-Z0-9]', '', texto_ocr.strip().upper())
 
-    # Corrección OCR
     if len(placa) == 6:
         letras = placa[:3].replace("0", "O").replace("1", "I").replace("2", "Z").replace("8", "B")
         numeros = placa[3:].replace("O", "0").replace("I", "1").replace("Z", "2").replace("B", "8")
@@ -311,11 +274,6 @@ def analizar_placa(texto_ocr):
         "restriccion_activa": restriccion_activa
     }, None
 
-
-# ==========================================
-# REGISTRO DE DETECCIONES
-# ==========================================
-
 def registrar_deteccion(placa, tipo_vehiculo, formato, restriccion_activa, estado):
     deteccion = {
         "timestamp": datetime.now(),
@@ -330,11 +288,6 @@ def registrar_deteccion(placa, tipo_vehiculo, formato, restriccion_activa, estad
 
     st.session_state.detecciones_historial.append(deteccion)
     st.session_state.contador_detecciones += 1
-
-
-# ==========================================
-# DASHBOARD
-# ==========================================
 
 def mostrar_dashboard():
     st.header("Panel de Análisis y Estadísticas")
@@ -364,7 +317,6 @@ def mostrar_dashboard():
 
     st.divider()
 
-    # Visualización 1: Barras
     st.subheader("Distribución por Tipo de Vehículo")
 
     conteo_tipos = df['tipo_vehiculo'].value_counts().reset_index()
@@ -393,7 +345,6 @@ def mostrar_dashboard():
 
     st.divider()
 
-    # Visualización 2: Pie
     st.subheader("Estado de Restricción")
 
     restriccion_data = df['restriccion_activa'].value_counts().reset_index()
@@ -428,7 +379,6 @@ def mostrar_dashboard():
 
     st.divider()
 
-    # Visualización 3: Línea temporal
     st.subheader("Detecciones por Hora del Día")
 
     detecciones_por_hora = df.groupby('hora').size().reset_index(name='cantidad')
@@ -469,7 +419,6 @@ def mostrar_dashboard():
 
     st.divider()
 
-    # Tabla de historial
     st.subheader("Historial de Detecciones")
 
     df_display = df[['timestamp', 'placa', 'tipo_vehiculo', 'formato', 'estado']].copy()
@@ -478,23 +427,17 @@ def mostrar_dashboard():
 
     st.dataframe(df_display, use_container_width=True, height=300)
 
-
-# ==========================================
-# INTERFAZ PRINCIPAL
-# ==========================================
-
 st.title("Sistema de Detección y Reconocimiento de Placas")
 st.caption("Implementación con YOLOv8, EasyOCR y Análisis de Restricciones Vehiculares")
 
-# Sidebar
 with st.sidebar:
     st.header("Configuración del Sistema")
 
     confianza = st.slider(
         "Umbral de confianza",
-        min_value=0.01,  # ← CAMBIADO: ahora permite hasta 0.01
+        min_value=0.01,
         max_value=0.90,
-        value=0.10,  # ← CAMBIADO: valor por defecto más bajo
+        value=0.10,
         step=0.01,
         help="Ajuste la sensibilidad. Valores bajos (0.01-0.20) para placas difíciles."
     )
@@ -534,12 +477,7 @@ with st.sidebar:
     - Plotly: Visualización de datos
     """)
 
-# Pestañas
 tab_detector, tab_dashboard = st.tabs(["Detección de Placas", "Panel de Análisis"])
-
-# ==========================================
-# PESTAÑA 1: DETECTOR
-# ==========================================
 
 with tab_detector:
     st.header("Procesamiento de Imágenes")
@@ -552,7 +490,6 @@ with tab_detector:
 
     if archivo:
 
-        # Leer imagen
         file_bytes = np.asarray(bytearray(archivo.read()), dtype=np.uint8)
         img = cv2.imdecode(file_bytes, 1)
         img_original = img.copy()
@@ -562,7 +499,6 @@ with tab_detector:
 
         col_imagen, col_resultados = st.columns([1, 1])
 
-        # Procesamiento
         with st.spinner("Procesando imagen..."):
             resultados = detector(img, conf=confianza, imgsz=1280)
 
@@ -574,7 +510,6 @@ with tab_detector:
         with col_resultados:
             st.subheader("Diagnóstico del Proceso")
 
-        # Análisis de detecciones
         num_boxes = sum(len(r.boxes) for r in resultados)
 
         if mostrar_debug_info:
@@ -602,7 +537,6 @@ with tab_detector:
                         mostrar_debug("Recorte de placa",
                                       f"Tamaño: {placa_crop.shape[1]}x{placa_crop.shape[0]} píxeles | Confianza YOLO: {conf_det:.2%}")
 
-                # Preprocesamiento OCR
                 gray = cv2.cvtColor(placa_crop, cv2.COLOR_BGR2GRAY)
                 gray = cv2.resize(gray, None, fx=4, fy=4, interpolation=cv2.INTER_CUBIC)
                 gray = cv2.GaussianBlur(gray, (3, 3), 0)
@@ -619,7 +553,6 @@ with tab_detector:
                     with col_imagen:
                         st.image(imagenes_ocr[1], caption="Preprocesamiento OCR", width=300)
 
-                # OCR
                 mejor_texto = ""
                 mejor_conf = 0
                 todos_textos = []
@@ -642,7 +575,6 @@ with tab_detector:
                         if todos_textos:
                             st.write("**Todos los textos:**", ", ".join(todos_textos[:10]))
 
-                # Procesar mejor resultado
                 if mejor_texto:
                     analisis, error_msg = analizar_placa(mejor_texto)
 
@@ -682,7 +614,6 @@ with tab_detector:
                         with col_resultados:
                             mostrar_debug("Sin texto OCR", "No se pudo leer ningún texto válido")
 
-        # Mostrar imagen procesada
         with col_imagen:
             st.image(img, channels="BGR", use_container_width=True)
 
@@ -691,7 +622,6 @@ with tab_detector:
             else:
                 mostrar_alerta('warning', "No se detectaron placas válidas.")
 
-        # Mostrar resultados
         with col_resultados:
             st.divider()
             st.subheader("Resultados del Análisis")
@@ -723,16 +653,8 @@ with tab_detector:
                 </ul>
                 """, unsafe_allow_html=True)
 
-# ==========================================
-# PESTAÑA 2: DASHBOARD
-# ==========================================
-
 with tab_dashboard:
     mostrar_dashboard()
-
-# ==========================================
-# FOOTER
-# ==========================================
 
 st.divider()
 
