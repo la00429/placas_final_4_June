@@ -1,0 +1,21 @@
+# Dataset para detección de placas colombianas - YOLOv8
+# Configuración corregida - Rutas relativas desde la raíz
+
+train: ./train/images
+val: ./valid/images
+test: ./test/images
+
+# Número de clases
+nc: 1
+
+# Nombres de las clases
+names:
+  0: placa
+
+# Información de Roboflow
+roboflow:
+  workspace: placas-colombia
+  project: proyecto-placas-8arfj
+  version: 2
+  license: CC BY 4.0
+  url: https://universe.roboflow.com/placas-colombia/proyecto-placas-8arfj/dataset/2
